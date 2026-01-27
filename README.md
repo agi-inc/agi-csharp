@@ -37,6 +37,8 @@ Console.WriteLine($"Steps taken: {result.Metadata.Steps}");
 
 ### Desktop Mode (Client-Driven Automation)
 
+> **Note:** Desktop mode is currently feature-gated. For enterprise access, contact [partner@theagi.company](mailto:partner@theagi.company).
+
 Desktop mode lets you run the agent on your local machine, controlling your desktop or any application.
 
 ```csharp
