@@ -5,7 +5,7 @@ namespace Agi.Types;
 /// <summary>
 /// Session status values
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonEnumMemberConverter<SessionStatus>))]
 public enum SessionStatus
 {
     [JsonPropertyName("ready")]
@@ -30,7 +30,7 @@ public enum SessionStatus
 /// <summary>
 /// Message types in session conversations
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonEnumMemberConverter<MessageType>))]
 public enum MessageType
 {
     [JsonPropertyName("THOUGHT")]
@@ -55,7 +55,7 @@ public enum MessageType
 /// <summary>
 /// Server-sent event types
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonEnumMemberConverter<EventType>))]
 public enum EventType
 {
     [JsonPropertyName("step")]
@@ -92,7 +92,7 @@ public enum EventType
 /// <summary>
 /// Desktop action types for client-driven sessions
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonEnumMemberConverter<DesktopActionType>))]
 public enum DesktopActionType
 {
     [JsonPropertyName("click")]
@@ -123,7 +123,7 @@ public enum DesktopActionType
 /// <summary>
 /// Click types for click actions
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonEnumMemberConverter<ClickType>))]
 public enum ClickType
 {
     [JsonPropertyName("left")]
@@ -142,7 +142,7 @@ public enum ClickType
 /// <summary>
 /// Scroll directions
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonEnumMemberConverter<ScrollDirection>))]
 public enum ScrollDirection
 {
     [JsonPropertyName("up")]
@@ -161,7 +161,7 @@ public enum ScrollDirection
 /// <summary>
 /// Session types for agent sessions
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonEnumMemberConverter<AgentSessionType>))]
 public enum AgentSessionType
 {
     /// <summary>
@@ -186,7 +186,7 @@ public enum AgentSessionType
 /// <summary>
 /// Save snapshot modes when deleting sessions
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonEnumMemberConverter<SaveSnapshotMode>))]
 public enum SaveSnapshotMode
 {
     [JsonPropertyName("none")]

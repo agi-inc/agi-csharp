@@ -62,11 +62,10 @@ public class SessionsResource
     /// </summary>
     public async Task<List<SessionResponse>> ListAsync(CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.RequestAsync<ListSessionsResponse>(
+        return await _httpClient.RequestAsync<List<SessionResponse>>(
             HttpMethod.Get,
             "/v1/sessions",
             cancellationToken: cancellationToken);
-        return response.Sessions;
     }
 
     /// <summary>
