@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (.NET ${{ matrix.dotnet-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dotnet-version: ['6.0', '8.0', '9.0']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Restore dependencies
+        run: dotnet restore src/Agi/Agi.csproj
+
+      - name: Build
+        run: dotnet build src/Agi/Agi.csproj --no-restore --configuration Release
+
+  build-examples:
+    name: Build Examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+
+      - name: Build all projects
+        run: dotnet build --configuration Release
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    # Only run on main branch push or manual trigger (not on PRs to protect API key)
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Run smoke tests
+        env:
+          AGI_API_KEY: ${{ secrets.AGI_API_KEY }}
+          AGI_API_BASE_URL: ${{ secrets.AGI_API_BASE_URL }}
+        run: dotnet run --project test/SmokeTest --configuration Release
+        continue-on-error: true
+
+  all-checks:
+    name: All Checks Passed
+    if: always()
+    needs: [build, build-examples]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs
+        run: |
+          if [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.build-examples.result }}" != "success" ]; then
+            echo "One or more checks failed"
+            exit 1
+          fi
+          echo "All checks passed!"
