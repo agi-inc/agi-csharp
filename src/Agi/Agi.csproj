@@ -8,7 +8,7 @@
 
     <!-- Package metadata -->
     <PackageId>Agi</PackageId>
-    <Version>1.0.0</Version>
+    <Version>0.0.1</Version>
     <Authors>AGI Inc.</Authors>
     <Company>AGI Inc.</Company>
     <Description>Official C# SDK for AGI - AI-powered browser automation and desktop agents</Description>
