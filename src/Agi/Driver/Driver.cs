@@ -312,7 +312,11 @@ public class AgentDriver : IDisposable, IAsyncDisposable
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                #if NET7_0_OR_GREATER
                 var line = await reader.ReadLineAsync(cancellationToken);
+#else
+                var line = await ReadLineWithCancellationAsync(reader, cancellationToken);
+#endif
                 if (line == null) break;
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
@@ -467,4 +471,24 @@ public class AgentDriver : IDisposable, IAsyncDisposable
     {
         await CleanupAsync();
     }
+
+#if !NET7_0_OR_GREATER
+    /// <summary>
+    /// Helper method to read a line with cancellation support for .NET 6.0.
+    /// </summary>
+    private static async Task<string?> ReadLineWithCancellationAsync(StreamReader reader, CancellationToken cancellationToken)
+    {
+        var readTask = reader.ReadLineAsync();
+        var delayTask = Task.Delay(Timeout.Infinite, cancellationToken);
+        
+        var completedTask = await Task.WhenAny(readTask, delayTask);
+        
+        if (completedTask == delayTask)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        
+        return await readTask;
+    }
+#endif
 }
