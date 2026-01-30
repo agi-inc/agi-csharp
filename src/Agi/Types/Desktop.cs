@@ -69,6 +69,24 @@ public class DesktopAction
     public int? StartY { get; set; }
 
     /// <summary>
+    /// End X coordinate for drag actions
+    /// </summary>
+    [JsonPropertyName("end_x")]
+    public int? EndX { get; set; }
+
+    /// <summary>
+    /// End Y coordinate for drag actions
+    /// </summary>
+    [JsonPropertyName("end_y")]
+    public int? EndY { get; set; }
+
+    /// <summary>
+    /// Content for type actions (alternative to text)
+    /// </summary>
+    [JsonPropertyName("content")]
+    public string? Content { get; set; }
+
+    /// <summary>
     /// Duration in seconds for wait actions
     /// </summary>
     [JsonPropertyName("duration")]

@@ -98,8 +98,23 @@ public enum DesktopActionType
     [JsonPropertyName("click")]
     Click,
 
+    [JsonPropertyName("double_click")]
+    DoubleClick,
+
+    [JsonPropertyName("right_click")]
+    RightClick,
+
+    [JsonPropertyName("triple_click")]
+    TripleClick,
+
+    [JsonPropertyName("hover")]
+    Hover,
+
     [JsonPropertyName("type")]
     Type,
+
+    [JsonPropertyName("key")]
+    Key,
 
     [JsonPropertyName("scroll")]
     Scroll,
@@ -112,6 +127,18 @@ public enum DesktopActionType
 
     [JsonPropertyName("wait")]
     Wait,
+
+    [JsonPropertyName("finish")]
+    Finish,
+
+    [JsonPropertyName("fail")]
+    Fail,
+
+    [JsonPropertyName("confirm")]
+    Confirm,
+
+    [JsonPropertyName("ask_question")]
+    AskQuestion,
 
     [JsonPropertyName("finished")]
     Finished,
