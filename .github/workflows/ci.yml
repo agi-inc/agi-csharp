@@ -66,6 +66,54 @@ jobs:
         run: dotnet run --project test/SmokeTest --configuration Release
         continue-on-error: true
 
+  driver-integration:
+    name: Driver Integration Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: >-
+      github.ref == 'refs/heads/main' ||
+      contains(github.head_ref || '', 'driver') ||
+      github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout driver repo
+        uses: actions/checkout@v4
+        with:
+          repository: agi-inc/agents
+          ref: jacob/agent-driver-module
+          path: agi-driver
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Install driver Python dependencies
+        run: pip install anthropic Pillow pydantic
+
+      - name: Install Xvfb and xdotool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xdotool scrot
+
+      - name: Run driver integration tests
+        env:
+          AGI_DRIVER_PATH: ${{ github.workspace }}/agi-driver/src/agi_driver
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DISPLAY: ":99"
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 &
+          sleep 2
+          dotnet run --project test/DriverIntegrationTest --configuration Release
+        timeout-minutes: 5
+
   all-checks:
     name: All Checks Passed
     if: always()
