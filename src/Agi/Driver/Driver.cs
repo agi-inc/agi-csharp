@@ -24,6 +24,11 @@ public class DriverOptions
     public string Platform { get; set; } = "desktop";
 
     /// <summary>
+    /// "local" for autonomous mode, "" for legacy SDK-driven mode.
+    /// </summary>
+    public string Mode { get; set; } = "";
+
+    /// <summary>
     /// Environment variables to pass to the driver process.
     /// </summary>
     public Dictionary<string, string>? Environment { get; set; }
@@ -63,6 +68,7 @@ public class AgentDriver : IDisposable, IAsyncDisposable
     private readonly string _binaryPath;
     private readonly string _model;
     private readonly string _platform;
+    private readonly string _mode;
     private readonly Dictionary<string, string>? _env;
 
     private Process? _process;
@@ -92,6 +98,7 @@ public class AgentDriver : IDisposable, IAsyncDisposable
         _binaryPath = opts.BinaryPath ?? BinaryLocator.FindBinaryPath();
         _model = opts.Model;
         _platform = opts.Platform;
+        _mode = opts.Mode;
         _env = opts.Environment;
     }
 
@@ -118,11 +125,18 @@ public class AgentDriver : IDisposable, IAsyncDisposable
     /// <summary>
     /// Start the agent with a goal.
     /// </summary>
+    /// <param name="goal">The task for the agent to accomplish.</param>
+    /// <param name="screenshot">Initial screenshot (base64-encoded). Not needed in local mode.</param>
+    /// <param name="screenWidth">Screen width in pixels. Not needed in local mode.</param>
+    /// <param name="screenHeight">Screen height in pixels. Not needed in local mode.</param>
+    /// <param name="mode">Override the mode set in DriverOptions.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public async Task<DriverResult> StartAsync(
         string goal,
-        string screenshot,
-        int screenWidth,
-        int screenHeight,
+        string screenshot = "",
+        int screenWidth = 0,
+        int screenHeight = 0,
+        string? mode = null,
         CancellationToken cancellationToken = default)
     {
         if (_process != null)
@@ -196,7 +210,8 @@ public class AgentDriver : IDisposable, IAsyncDisposable
             ScreenWidth = screenWidth,
             ScreenHeight = screenHeight,
             Platform = _platform,
-            Model = _model
+            Model = _model,
+            Mode = mode ?? _mode
         };
         await SendCommandAsync(startCmd);
 
@@ -389,6 +404,10 @@ public class AgentDriver : IDisposable, IAsyncDisposable
                         // Wait for manual response
                     }
                 }
+                break;
+
+            case ScreenshotCapturedEvent:
+                // Informational event, no action needed
                 break;
 
             case FinishedEvent finishedEvent:

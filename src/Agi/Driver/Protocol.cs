@@ -15,7 +15,8 @@ public enum DriverEventType
     Confirm,
     AskQuestion,
     Finished,
-    Error
+    Error,
+    ScreenshotCaptured
 }
 
 /// <summary>
@@ -211,6 +212,21 @@ public class ErrorEvent : BaseDriverEvent
 }
 
 /// <summary>
+/// Emitted in local mode when the driver captures a screenshot.
+/// Lightweight notification (no image data).
+/// </summary>
+public class ScreenshotCapturedEvent : BaseDriverEvent
+{
+    public override string EventName => "screenshot_captured";
+
+    [JsonPropertyName("width")]
+    public int Width { get; set; }
+
+    [JsonPropertyName("height")]
+    public int Height { get; set; }
+}
+
+/// <summary>
 /// Start command.
 /// </summary>
 public class StartCommand
@@ -238,6 +254,12 @@ public class StartCommand
 
     [JsonPropertyName("model")]
     public string Model { get; set; } = "claude-sonnet";
+
+    /// <summary>
+    /// "local" for autonomous mode, "" for legacy SDK-driven mode.
+    /// </summary>
+    [JsonPropertyName("mode")]
+    public string Mode { get; set; } = "";
 }
 
 /// <summary>
@@ -347,6 +369,7 @@ public static class DriverProtocol
             "ask_question" => JsonSerializer.Deserialize<AskQuestionEvent>(line, JsonOptions)!,
             "finished" => JsonSerializer.Deserialize<FinishedEvent>(line, JsonOptions)!,
             "error" => JsonSerializer.Deserialize<ErrorEvent>(line, JsonOptions)!,
+            "screenshot_captured" => JsonSerializer.Deserialize<ScreenshotCapturedEvent>(line, JsonOptions)!,
             _ => throw new ArgumentException($"Unknown event type: {eventType}")
         };
     }
