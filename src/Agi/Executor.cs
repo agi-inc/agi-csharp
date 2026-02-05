@@ -335,8 +335,13 @@ $.CGEventPost($.kCGHIDEventTap, move);";
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            var escaped = text.Replace("\\", "\\\\").Replace("\"", "\\\"");
-            await RunShellCommandAsync($"osascript -e 'tell application \"System Events\" to keystroke \"{escaped}\"'");
+            // Use JXA with JSON-safe text encoding via temp file to avoid shell injection
+            var jsonSafe = JsonSerializer.Serialize(text);
+            var jxaScript = $@"
+ObjC.import('Cocoa');
+var app = Application('System Events');
+app.keystroke({jsonSafe});";
+            await RunJxaScriptAsync(jxaScript);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -359,7 +364,7 @@ $.CGEventPost($.kCGHIDEventTap, move);";
         else
         {
             await EnsureXdotoolAsync();
-            await RunCommandAsync("xdotool", $"type \"{text}\"");
+            await RunCommandWithArgsAsync("xdotool", "type", "--clearmodifiers", "--", text);
         }
 
         return true;
@@ -666,6 +671,25 @@ $.CGEventPost($.kCGHIDEventTap, mouseUp);";
                 CreateNoWindow = true
             }
         };
+
+        process.Start();
+        var output = await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        return output;
+    }
+
+    private static async Task<string> RunCommandWithArgsAsync(string command, params string[] arguments)
+    {
+        using var process = new Process();
+        process.StartInfo.FileName = command;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.RedirectStandardError = true;
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.CreateNoWindow = true;
+        foreach (var arg in arguments)
+        {
+            process.StartInfo.ArgumentList.Add(arg);
+        }
 
         process.Start();
         var output = await process.StandardOutput.ReadToEndAsync();
