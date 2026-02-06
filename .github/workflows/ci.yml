@@ -82,6 +82,14 @@ jobs:
         with:
           dotnet-version: '9.0'
 
+      - name: Download agi-driver binary
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh release download --repo agi-inc/agents --pattern "agi-driver-linux-x64" -D /usr/local/bin/ || true
+          chmod +x /usr/local/bin/agi-driver-linux-x64 2>/dev/null || true
+          mv /usr/local/bin/agi-driver-linux-x64 /usr/local/bin/agi-driver 2>/dev/null || true
+
       - name: Install Xvfb and xdotool
         run: |
           sudo apt-get update
