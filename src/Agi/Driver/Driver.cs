@@ -65,8 +65,7 @@ public class DriverResult
 /// </summary>
 public class AgentDriver : IDisposable, IAsyncDisposable
 {
-    private readonly string? _binaryPath;
-    private readonly (string Command, string[] Args)? _pythonFallback;
+    private readonly string _binaryPath;
     private readonly string _model;
     private readonly string _platform;
     private readonly string _mode;
@@ -97,30 +96,8 @@ public class AgentDriver : IDisposable, IAsyncDisposable
     {
         var opts = options ?? new DriverOptions();
 
-        // Try to find binary, fall back to Python if available
-        string? binaryPath = opts.BinaryPath;
-        (string Command, string[] Args)? pythonFallback = null;
-        if (binaryPath == null)
-        {
-            try
-            {
-                binaryPath = BinaryLocator.FindBinaryPath();
-            }
-            catch
-            {
-                pythonFallback = BinaryLocator.GetPythonFallback();
-            }
-        }
-
-        if (binaryPath == null && pythonFallback == null)
-        {
-            throw new FileNotFoundException(
-                "Could not find agi-driver binary and Python fallback is not available. " +
-                "Set AGI_DRIVER_PATH to the agi_driver source directory for development.");
-        }
-
-        _binaryPath = binaryPath;
-        _pythonFallback = pythonFallback;
+        // Find the native binary
+        _binaryPath = opts.BinaryPath ?? BinaryLocator.FindBinaryPath();
         _model = opts.Model;
         _platform = opts.Platform;
         _mode = opts.Mode;
@@ -172,45 +149,15 @@ public class AgentDriver : IDisposable, IAsyncDisposable
         _readCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         // Start the process
-        ProcessStartInfo startInfo;
-        if (_binaryPath != null)
+        var startInfo = new ProcessStartInfo
         {
-            startInfo = new ProcessStartInfo
-            {
-                FileName = _binaryPath,
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-        }
-        else if (_pythonFallback is { } fallback)
-        {
-            startInfo = new ProcessStartInfo
-            {
-                FileName = fallback.Command,
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-            foreach (var arg in fallback.Args)
-                startInfo.ArgumentList.Add(arg);
-
-            var driverPath = Environment.GetEnvironmentVariable("AGI_DRIVER_PATH") ?? "";
-            if (!string.IsNullOrEmpty(driverPath))
-            {
-                var parentDir = Path.GetDirectoryName(driverPath) ?? driverPath;
-                startInfo.Environment["PYTHONPATH"] = parentDir;
-                startInfo.WorkingDirectory = parentDir;
-            }
-        }
-        else
-        {
-            throw new InvalidOperationException("No binary or Python fallback available");
-        }
+            FileName = _binaryPath,
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
 
         if (_env != null)
         {

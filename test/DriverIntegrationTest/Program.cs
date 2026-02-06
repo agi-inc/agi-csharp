@@ -1,8 +1,8 @@
 /// <summary>
-/// Integration tests for AgentDriver with real agi-driver from source.
+/// Integration tests for AgentDriver with real agi-driver binary.
 ///
 /// Requires:
-///   - AGI_DRIVER_PATH: path to the agi_driver package directory
+///   - agi-driver binary available on PATH or in standard locations
 ///   - ANTHROPIC_API_KEY: valid Anthropic API key
 ///
 /// Spawns the real driver, communicates over JSON lines, and runs
@@ -11,12 +11,11 @@
 
 using Agi.Driver;
 
-var driverPath = Environment.GetEnvironmentVariable("AGI_DRIVER_PATH") ?? "";
 var apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? "";
 
-if (string.IsNullOrEmpty(driverPath) || !File.Exists(Path.Combine(driverPath, "__main__.py")))
+if (!BinaryLocator.IsBinaryAvailable())
 {
-    Console.WriteLine("SKIP: AGI_DRIVER_PATH not set or invalid");
+    Console.WriteLine("SKIP: agi-driver binary not found");
     return 0;
 }
 
