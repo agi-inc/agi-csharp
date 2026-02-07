@@ -130,24 +130,4 @@ public static class BinaryLocator
         }
     }
 
-    /// <summary>
-    /// Get the Python fallback command if AGI_DRIVER_PATH is set.
-    /// This is a development fallback when the binary isn't compiled.
-    /// AGI_DRIVER_PATH must point to the agi_driver package directory
-    /// (e.g., /path/to/agi-api/src/agi_driver).
-    /// </summary>
-    /// <returns>Tuple of (command, arguments) or null if not available.</returns>
-    public static (string Command, string[] Args)? GetPythonFallback()
-    {
-        var driverPath = Environment.GetEnvironmentVariable("AGI_DRIVER_PATH");
-        if (string.IsNullOrEmpty(driverPath))
-            return null;
-
-        var mainFile = Path.Combine(driverPath, "__main__.py");
-        if (!File.Exists(mainFile))
-            return null;
-
-        var pythonCmd = Environment.GetEnvironmentVariable("PYTHON_PATH") ?? "python";
-        return (pythonCmd, new[] { "-m", "agi_driver" });
-    }
 }

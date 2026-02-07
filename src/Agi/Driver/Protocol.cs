@@ -16,7 +16,8 @@ public enum DriverEventType
     AskQuestion,
     Finished,
     Error,
-    ScreenshotCaptured
+    ScreenshotCaptured,
+    SessionCreated
 }
 
 /// <summary>
@@ -227,6 +228,26 @@ public class ScreenshotCapturedEvent : BaseDriverEvent
 }
 
 /// <summary>
+/// Emitted after the driver creates an API session.
+/// </summary>
+public class SessionCreatedEvent : BaseDriverEvent
+{
+    public override string EventName => "session_created";
+
+    [JsonPropertyName("session_id")]
+    public string SessionId { get; set; } = "";
+
+    [JsonPropertyName("agent_url")]
+    public string AgentUrl { get; set; } = "";
+
+    [JsonPropertyName("environment_url")]
+    public string? EnvironmentUrl { get; set; }
+
+    [JsonPropertyName("vnc_url")]
+    public string? VncUrl { get; set; }
+}
+
+/// <summary>
 /// Start command.
 /// </summary>
 public class StartCommand
@@ -256,10 +277,28 @@ public class StartCommand
     public string Model { get; set; } = "claude-sonnet";
 
     /// <summary>
-    /// "local" for autonomous mode, "" for legacy SDK-driven mode.
+    /// "local" for autonomous mode, "remote" for managed VM, "" for legacy SDK-driven mode.
     /// </summary>
     [JsonPropertyName("mode")]
     public string Mode { get; set; } = "";
+
+    /// <summary>
+    /// Agent name for the AGI API (e.g., "agi-2-claude").
+    /// </summary>
+    [JsonPropertyName("agent_name")]
+    public string? AgentName { get; set; }
+
+    /// <summary>
+    /// AGI API base URL (default: "https://api.agi.tech").
+    /// </summary>
+    [JsonPropertyName("api_url")]
+    public string? ApiUrl { get; set; }
+
+    /// <summary>
+    /// Environment type for remote mode ("ubuntu-1" or "chrome-1").
+    /// </summary>
+    [JsonPropertyName("environment_type")]
+    public string? EnvironmentType { get; set; }
 }
 
 /// <summary>
@@ -370,6 +409,7 @@ public static class DriverProtocol
             "finished" => JsonSerializer.Deserialize<FinishedEvent>(line, JsonOptions)!,
             "error" => JsonSerializer.Deserialize<ErrorEvent>(line, JsonOptions)!,
             "screenshot_captured" => JsonSerializer.Deserialize<ScreenshotCapturedEvent>(line, JsonOptions)!,
+            "session_created" => JsonSerializer.Deserialize<SessionCreatedEvent>(line, JsonOptions)!,
             _ => throw new ArgumentException($"Unknown event type: {eventType}")
         };
     }

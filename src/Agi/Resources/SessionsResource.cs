@@ -48,6 +48,8 @@ public class SessionsResource
                 body["cdp_ws_url"] = options.CdpWsUrl;
             if (options.Model != null)
                 body["model"] = options.Model;
+            if (options.EnvironmentType != null)
+                body["environment_type"] = options.EnvironmentType;
         }
 
         return await _httpClient.RequestAsync<SessionResponse>(
