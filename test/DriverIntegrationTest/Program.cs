@@ -3,15 +3,15 @@
 ///
 /// Requires:
 ///   - agi-driver binary available on PATH or in standard locations
-///   - ANTHROPIC_API_KEY: valid Anthropic API key
+///   - AGI_API_KEY: valid AGI API key
 ///
 /// Spawns the real driver, communicates over JSON lines, and runs
-/// a real task with the Anthropic API.
+/// a real task via the AGI API.
 /// </summary>
 
 using Agi.Driver;
 
-var apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? "";
+var apiKey = Environment.GetEnvironmentVariable("AGI_API_KEY") ?? "";
 
 if (!BinaryLocator.IsBinaryAvailable())
 {
@@ -21,17 +21,17 @@ if (!BinaryLocator.IsBinaryAvailable())
 
 if (string.IsNullOrEmpty(apiKey))
 {
-    Console.WriteLine("SKIP: ANTHROPIC_API_KEY not set");
+    Console.WriteLine("SKIP: AGI_API_KEY not set");
     return 0;
 }
 
 var passed = 0;
 var failed = 0;
 
-// Test 1: Full end-to-end local mode task
+// Test 1: Full end-to-end local mode task (client-desktop)
 try
 {
-    Console.WriteLine("TEST: driver_local_mode...");
+    Console.WriteLine("TEST: driver_local_mode (client-desktop)...");
 
     var thinkingTexts = new List<string>();
     var states = new List<DriverState>();
@@ -41,7 +41,7 @@ try
         Mode = "local",
         Environment = new Dictionary<string, string>
         {
-            ["ANTHROPIC_API_KEY"] = apiKey
+            ["AGI_API_KEY"] = apiKey
         }
     });
 
@@ -52,7 +52,7 @@ try
     };
     driver.OnStateChange += state => states.Add(state);
 
-    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
     var result = await driver.StartAsync(
         goal: "Take a screenshot and describe what you see. Then finish.",
         mode: "local",
@@ -72,7 +72,59 @@ catch (Exception ex)
     failed++;
 }
 
-// Test 2: Protocol handshake and clean stop
+// Test 2: Remote mode task (client-managed-desktop)
+try
+{
+    Console.WriteLine("TEST: driver_remote_mode (client-managed-desktop)...");
+
+    var thinkingTexts = new List<string>();
+    var states = new List<DriverState>();
+    var gotSessionCreated = false;
+
+    var driver = new AgentDriver(new DriverOptions
+    {
+        Mode = "remote",
+        EnvironmentType = "ubuntu-1",
+        Environment = new Dictionary<string, string>
+        {
+            ["AGI_API_KEY"] = apiKey
+        }
+    });
+
+    driver.OnThinking += text =>
+    {
+        thinkingTexts.Add(text);
+        return Task.CompletedTask;
+    };
+    driver.OnStateChange += state => states.Add(state);
+    driver.OnEvent += evt =>
+    {
+        if (evt is SessionCreatedEvent)
+            gotSessionCreated = true;
+    };
+
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(180));
+    var result = await driver.StartAsync(
+        goal: "Take a screenshot and describe what you see. Then finish.",
+        mode: "remote",
+        cancellationToken: cts.Token);
+
+    Assert(result.Success, "result.Success should be true");
+    Assert(!string.IsNullOrEmpty(result.Summary), "result.Summary should be non-empty");
+    Assert(gotSessionCreated, "should have received session_created event");
+    Assert(thinkingTexts.Count > 0, "should have received thinking events");
+    Assert(states.Contains(DriverState.Running), "should have entered running state");
+
+    Console.WriteLine("  PASSED");
+    passed++;
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"  FAILED: {ex.Message}");
+    failed++;
+}
+
+// Test 3: Protocol handshake and clean stop
 try
 {
     Console.WriteLine("TEST: driver_protocol_handshake...");
@@ -85,7 +137,7 @@ try
         Mode = "local",
         Environment = new Dictionary<string, string>
         {
-            ["ANTHROPIC_API_KEY"] = apiKey
+            ["AGI_API_KEY"] = apiKey
         }
     });
 

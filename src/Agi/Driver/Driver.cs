@@ -24,9 +24,24 @@ public class DriverOptions
     public string Platform { get; set; } = "desktop";
 
     /// <summary>
-    /// "local" for autonomous mode, "" for legacy SDK-driven mode.
+    /// "local" for autonomous mode, "remote" for managed VM, "" for legacy SDK-driven mode.
     /// </summary>
     public string Mode { get; set; } = "";
+
+    /// <summary>
+    /// Agent name for the AGI API (e.g., "agi-2-claude").
+    /// </summary>
+    public string? AgentName { get; set; }
+
+    /// <summary>
+    /// AGI API base URL (default: "https://api.agi.tech").
+    /// </summary>
+    public string? ApiUrl { get; set; }
+
+    /// <summary>
+    /// Environment type for remote mode ("ubuntu-1" or "chrome-1").
+    /// </summary>
+    public string? EnvironmentType { get; set; }
 
     /// <summary>
     /// Environment variables to pass to the driver process.
@@ -69,6 +84,9 @@ public class AgentDriver : IDisposable, IAsyncDisposable
     private readonly string _model;
     private readonly string _platform;
     private readonly string _mode;
+    private readonly string? _agentName;
+    private readonly string? _apiUrl;
+    private readonly string? _environmentType;
     private readonly Dictionary<string, string>? _env;
 
     private Process? _process;
@@ -101,6 +119,9 @@ public class AgentDriver : IDisposable, IAsyncDisposable
         _model = opts.Model;
         _platform = opts.Platform;
         _mode = opts.Mode;
+        _agentName = opts.AgentName;
+        _apiUrl = opts.ApiUrl;
+        _environmentType = opts.EnvironmentType;
         _env = opts.Environment;
     }
 
@@ -213,7 +234,10 @@ public class AgentDriver : IDisposable, IAsyncDisposable
             ScreenHeight = screenHeight,
             Platform = _platform,
             Model = _model,
-            Mode = mode ?? _mode
+            Mode = mode ?? _mode,
+            AgentName = _agentName,
+            ApiUrl = _apiUrl,
+            EnvironmentType = _environmentType
         };
         await SendCommandAsync(startCmd);
 
@@ -410,6 +434,10 @@ public class AgentDriver : IDisposable, IAsyncDisposable
 
             case ScreenshotCapturedEvent:
                 // Informational event, no action needed
+                break;
+
+            case SessionCreatedEvent:
+                // Informational event, available via OnEvent handler
                 break;
 
             case FinishedEvent finishedEvent:

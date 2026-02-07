@@ -97,7 +97,7 @@ jobs:
 
       - name: Run driver integration tests
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AGI_API_KEY: ${{ secrets.AGI_API_KEY }}
           DISPLAY: ":99"
         run: |
           Xvfb :99 -screen 0 1920x1080x24 &
