@@ -49,6 +49,12 @@ public class SessionCreateOptions
     /// </summary>
     [JsonPropertyName("model")]
     public string? Model { get; set; }
+
+    /// <summary>
+    /// Cloud environment type: "chrome-1" (Chrome + desktop VM) or "ubuntu-1" (desktop-only VM)
+    /// </summary>
+    [JsonPropertyName("environment_type")]
+    public string? EnvironmentType { get; set; }
 }
 
 /// <summary>
