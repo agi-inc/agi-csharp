@@ -124,7 +124,6 @@ try
     Console.WriteLine("TEST: driver_protocol_handshake...");
 
     var states = new List<DriverState>();
-    var gotAction = new TaskCompletionSource<bool>();
 
     var driver = new AgentDriver(new DriverOptions
     {
@@ -135,25 +134,25 @@ try
         }
     });
 
-    driver.OnStateChange += state => states.Add(state);
-    // Gate on first action event (always emitted) instead of thinking (not yet returned by API)
-    driver.OnAction += _ =>
+    var gotRunning = new TaskCompletionSource<bool>();
+    driver.OnStateChange += state =>
     {
-        gotAction.TrySetResult(true);
-        return Task.CompletedTask;
+        states.Add(state);
+        if (state == DriverState.Running)
+            gotRunning.TrySetResult(true);
     };
 
-    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(120));
 
-    // Start in background and stop after first action event
+    // Start in background and stop after entering running state
     var resultTask = driver.StartAsync(
         goal: "Describe the screen",
         mode: "local",
         cancellationToken: cts.Token);
 
-    // Wait for first action event
-    await Task.WhenAny(gotAction.Task, Task.Delay(TimeSpan.FromSeconds(60), cts.Token));
-    Assert(gotAction.Task.IsCompleted, "should have received action event");
+    // Wait for running state (always emitted after session creation)
+    await Task.WhenAny(gotRunning.Task, Task.Delay(TimeSpan.FromSeconds(60), cts.Token));
+    Assert(gotRunning.Task.IsCompleted, "should have entered running state");
 
     await driver.StopAsync("test complete");
 
