@@ -82,21 +82,13 @@ jobs:
         with:
           dotnet-version: '9.0'
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Checkout driver repo
-        uses: actions/checkout@v4
-        with:
-          repository: agi-inc/agents
-          ref: jacob/agent-driver-module
-          path: agi-driver
-          token: ${{ secrets.GH_PAT }}
-
-      - name: Install driver Python dependencies
-        run: pip install anthropic Pillow pydantic
+      - name: Download agi-driver binary
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh release download --repo agi-inc/agents --pattern "agi-driver-linux-x64" -D /usr/local/bin/ || true
+          chmod +x /usr/local/bin/agi-driver-linux-x64 2>/dev/null || true
+          mv /usr/local/bin/agi-driver-linux-x64 /usr/local/bin/agi-driver 2>/dev/null || true
 
       - name: Install Xvfb and xdotool
         run: |
@@ -105,8 +97,7 @@ jobs:
 
       - name: Run driver integration tests
         env:
-          AGI_DRIVER_PATH: ${{ github.workspace }}/agi-driver/src/agi_driver
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AGI_API_KEY: ${{ secrets.AGI_API_KEY }}
           DISPLAY: ":99"
         run: |
           Xvfb :99 -screen 0 1920x1080x24 &
