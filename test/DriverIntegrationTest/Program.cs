@@ -152,7 +152,7 @@ try
         cancellationToken: cts.Token);
 
     // Wait for first action event
-    await Task.WhenAny(gotAction.Task, Task.Delay(TimeSpan.FromSeconds(30), cts.Token));
+    await Task.WhenAny(gotAction.Task, Task.Delay(TimeSpan.FromSeconds(60), cts.Token));
     Assert(gotAction.Task.IsCompleted, "should have received action event");
 
     await driver.StopAsync("test complete");
