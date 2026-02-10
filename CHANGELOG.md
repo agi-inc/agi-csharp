@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/agi-inc/agi-csharp/compare/v0.4.1...v0.4.2) (2026-02-10)
+
+
+### Features
+
+* add comprehensive multimodal driver support documentation ([#8](https://github.com/agi-inc/agi-csharp/issues/8)) ([72a02ee](https://github.com/agi-inc/agi-csharp/commit/72a02eea198663e8d47179f5806e2990d4a76f03))
+
 ## [0.4.1](https://github.com/agi-inc/agi-csharp/compare/v0.4.0...v0.4.1) (2026-02-09)
 
 
