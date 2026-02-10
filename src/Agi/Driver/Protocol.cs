@@ -17,7 +17,12 @@ public enum DriverEventType
     Finished,
     Error,
     ScreenshotCaptured,
-    SessionCreated
+    SessionCreated,
+    AudioTranscript,
+    VideoFrame,
+    SpeechStarted,
+    SpeechFinished,
+    TurnDetected
 }
 
 /// <summary>
@@ -31,7 +36,9 @@ public enum DriverCommandType
     Resume,
     Stop,
     Confirm,
-    Answer
+    Answer,
+    GetAudioTranscript,
+    GetVideoFrame
 }
 
 /// <summary>
@@ -299,6 +306,41 @@ public class StartCommand
     /// </summary>
     [JsonPropertyName("environment_type")]
     public string? EnvironmentType { get; set; }
+
+    // Multimodal fields
+
+    [JsonPropertyName("mcp_servers")]
+    public List<MCPServerConfig>? McpServers { get; set; }
+
+    [JsonPropertyName("audio_input_enabled")]
+    public bool? AudioInputEnabled { get; set; }
+
+    [JsonPropertyName("audio_buffer_seconds")]
+    public int? AudioBufferSeconds { get; set; }
+
+    [JsonPropertyName("turn_detection_enabled")]
+    public bool? TurnDetectionEnabled { get; set; }
+
+    [JsonPropertyName("turn_detection_silence_ms")]
+    public int? TurnDetectionSilenceMs { get; set; }
+
+    [JsonPropertyName("speech_output_enabled")]
+    public bool? SpeechOutputEnabled { get; set; }
+
+    [JsonPropertyName("speech_voice")]
+    public string? SpeechVoice { get; set; }
+
+    [JsonPropertyName("camera_enabled")]
+    public bool? CameraEnabled { get; set; }
+
+    [JsonPropertyName("camera_buffer_seconds")]
+    public int? CameraBufferSeconds { get; set; }
+
+    [JsonPropertyName("screen_recording_enabled")]
+    public bool? ScreenRecordingEnabled { get; set; }
+
+    [JsonPropertyName("screen_recording_buffer_seconds")]
+    public int? ScreenRecordingBufferSeconds { get; set; }
 }
 
 /// <summary>
@@ -410,6 +452,11 @@ public static class DriverProtocol
             "error" => JsonSerializer.Deserialize<ErrorEvent>(line, JsonOptions)!,
             "screenshot_captured" => JsonSerializer.Deserialize<ScreenshotCapturedEvent>(line, JsonOptions)!,
             "session_created" => JsonSerializer.Deserialize<SessionCreatedEvent>(line, JsonOptions)!,
+            "audio_transcript" => JsonSerializer.Deserialize<AudioTranscriptEvent>(line, JsonOptions)!,
+            "video_frame" => JsonSerializer.Deserialize<VideoFrameEvent>(line, JsonOptions)!,
+            "speech_started" => JsonSerializer.Deserialize<SpeechStartedEvent>(line, JsonOptions)!,
+            "speech_finished" => JsonSerializer.Deserialize<SpeechFinishedEvent>(line, JsonOptions)!,
+            "turn_detected" => JsonSerializer.Deserialize<TurnDetectedEvent>(line, JsonOptions)!,
             _ => throw new ArgumentException($"Unknown event type: {eventType}")
         };
     }

@@ -3,58 +3,8 @@ using System.Text.Json.Serialization;
 
 namespace Agi.Driver;
 
-/// <summary>
-/// Event types emitted by the driver.
-/// </summary>
-public enum DriverEventType
-{
-    Ready,
-    StateChange,
-    Thinking,
-    Action,
-    Confirm,
-    AskQuestion,
-    Finished,
-    Error,
-    ScreenshotCaptured,
-    SessionCreated,
-    AudioTranscript,
-    VideoFrame,
-    SpeechStarted,
-    SpeechFinished,
-    TurnDetected
-}
-
-/// <summary>
-/// Command types sent to the driver.
-/// </summary>
-public enum DriverCommandType
-{
-    Start,
-    Screenshot,
-    Pause,
-    Resume,
-    Stop,
-    Confirm,
-    Answer,
-    GetAudioTranscript,
-    GetVideoFrame
-}
-
-/// <summary>
-/// Driver execution states.
-/// </summary>
-public enum DriverState
-{
-    Idle,
-    Running,
-    Paused,
-    WaitingConfirmation,
-    WaitingAnswer,
-    Finished,
-    Stopped,
-    Error
-}
+// Enums (DriverEventType, DriverCommandType, DriverState) are defined in Protocol.cs.
+// This file contains multimodal-specific types: events, commands, and helper classes.
 
 /// <summary>
 /// MCP server configuration.
@@ -211,4 +161,3 @@ public class GetVideoFrameCommand
     public int SecondsAgo { get; set; } = 1;
 }
 
-// Updated StartCommand with multimodal fields (add these fields to existing StartCommand class)
