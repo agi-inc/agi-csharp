@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 
 namespace Agi.Driver;
 
@@ -47,6 +48,33 @@ public class DriverOptions
     /// Environment variables to pass to the driver process.
     /// </summary>
     public Dictionary<string, string>? Environment { get; set; }
+
+    // Multimodal options
+
+    /// <summary>
+    /// Enable voice input/output.
+    /// </summary>
+    public bool Voice { get; set; }
+
+    /// <summary>
+    /// Enable camera video feed.
+    /// </summary>
+    public bool Camera { get; set; }
+
+    /// <summary>
+    /// Enable screen recording.
+    /// </summary>
+    public bool Screen { get; set; }
+
+    /// <summary>
+    /// Enable MCP servers.
+    /// </summary>
+    public bool Mcp { get; set; }
+
+    /// <summary>
+    /// Path to MCP config file.
+    /// </summary>
+    public string McpConfig { get; set; } = "~/.agi/mcp.json";
 }
 
 /// <summary>
@@ -88,6 +116,11 @@ public class AgentDriver : IDisposable, IAsyncDisposable
     private readonly string? _apiUrl;
     private readonly string? _environmentType;
     private readonly Dictionary<string, string>? _env;
+    private readonly bool _voice;
+    private readonly bool _camera;
+    private readonly bool _screen;
+    private readonly bool _mcp;
+    private readonly string _mcpConfig;
 
     private Process? _process;
     private StreamWriter? _stdin;
@@ -123,6 +156,58 @@ public class AgentDriver : IDisposable, IAsyncDisposable
         _apiUrl = opts.ApiUrl;
         _environmentType = opts.EnvironmentType;
         _env = opts.Environment;
+        _voice = opts.Voice;
+        _camera = opts.Camera;
+        _screen = opts.Screen;
+        _mcp = opts.Mcp;
+        _mcpConfig = opts.McpConfig;
+    }
+
+    /// <summary>
+    /// Load MCP server configuration from a JSON file.
+    /// </summary>
+    private static List<MCPServerConfig>? LoadMcpConfig(string configPath)
+    {
+        try
+        {
+            var expanded = configPath.StartsWith("~")
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), configPath[2..])
+                : Path.GetFullPath(configPath);
+
+            if (!File.Exists(expanded))
+                return null;
+
+            var json = File.ReadAllText(expanded);
+            var config = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+            if (config == null) return null;
+
+            var servers = new List<MCPServerConfig>();
+            foreach (var (name, serverElement) in config)
+            {
+                var server = new MCPServerConfig
+                {
+                    Name = name,
+                    Command = serverElement.TryGetProperty("command", out var cmd) ? cmd.GetString() ?? "" : "",
+                    Args = serverElement.TryGetProperty("args", out var args) && args.ValueKind == JsonValueKind.Array
+                        ? args.EnumerateArray().Select(a => a.GetString() ?? "").ToArray()
+                        : Array.Empty<string>(),
+                };
+                if (serverElement.TryGetProperty("env", out var env) && env.ValueKind == JsonValueKind.Object)
+                {
+                    server.Env = new Dictionary<string, string>();
+                    foreach (var prop in env.EnumerateObject())
+                    {
+                        server.Env[prop.Name] = prop.Value.GetString() ?? "";
+                    }
+                }
+                servers.Add(server);
+            }
+            return servers;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -237,7 +322,15 @@ public class AgentDriver : IDisposable, IAsyncDisposable
             Mode = mode ?? _mode,
             AgentName = _agentName,
             ApiUrl = _apiUrl,
-            EnvironmentType = _environmentType
+            EnvironmentType = _environmentType,
+            // Multimodal options
+            AudioInputEnabled = _voice ? true : null,
+            TurnDetectionEnabled = _voice ? true : null,
+            SpeechOutputEnabled = _voice ? true : null,
+            SpeechVoice = _voice ? "alloy" : null,
+            CameraEnabled = _camera ? true : null,
+            ScreenRecordingEnabled = _screen ? true : null,
+            McpServers = _mcp ? LoadMcpConfig(_mcpConfig) : null,
         };
         await SendCommandAsync(startCmd);
 
