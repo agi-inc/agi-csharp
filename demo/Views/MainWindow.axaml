@@ -1,0 +1,194 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AgiDemo.ViewModels"
+        xmlns:conv="using:AgiDemo.Converters"
+        x:Class="AgiDemo.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="AGI SDK Demo"
+        Width="1200" Height="800"
+        Background="#1a1a2e">
+
+    <Window.Resources>
+        <conv:StatusToColorConverter x:Key="StatusToColor" />
+        <conv:EventTypeToColorConverter x:Key="EventTypeToColor" />
+        <conv:Base64ToImageConverter x:Key="Base64ToImage" />
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Status Bar -->
+        <Border DockPanel.Dock="Bottom" Background="#16213e" BorderBrush="#2a2a4a" BorderThickness="0,1,0,0" Height="32" Padding="12,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="16">
+                <TextBlock Text="{Binding ConnectionStatusText}" Foreground="#888" FontSize="12" />
+                <TextBlock Text="{Binding SessionStatusText}" Foreground="#888" FontSize="12" />
+                <TextBlock Text="{Binding RunStatusText}"
+                           Foreground="{Binding RunStatusColor, Converter={StaticResource EventTypeToColor}}"
+                           FontWeight="Bold" FontSize="12"
+                           HorizontalAlignment="Right" />
+            </StackPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="260,*">
+            <!-- Sidebar -->
+            <Border Grid.Column="0" Background="#16213e" BorderBrush="#2a2a4a" BorderThickness="0,0,1,0" Padding="12">
+                <StackPanel Spacing="8">
+                    <!-- Title -->
+                    <TextBlock Text="AGI SDK Demo" FontSize="16" FontWeight="Bold" Foreground="#e94560"
+                               HorizontalAlignment="Center" Margin="0,0,0,8" />
+
+                    <!-- API Key -->
+                    <TextBlock Text="API KEY" Foreground="#888" FontSize="11" FontWeight="Bold" />
+                    <TextBox Watermark="Enter your AGI API key..."
+                             PasswordChar="*"
+                             Text="{Binding ApiKey}"
+                             IsEnabled="{Binding !IsConnected}" />
+                    <Button Content="Connect" Command="{Binding ConnectCommand}"
+                            IsEnabled="{Binding !IsConnected}"
+                            HorizontalAlignment="Stretch"
+                            Background="#e94560" Foreground="White" FontWeight="Bold"
+                            HorizontalContentAlignment="Center"
+                            CornerRadius="6" Padding="8,8" />
+
+                    <!-- Agent Model -->
+                    <TextBlock Text="AGENT MODEL" Foreground="#888" FontSize="11" FontWeight="Bold" Margin="0,8,0,0" />
+                    <ComboBox ItemsSource="{Binding AgentModels}"
+                              SelectedItem="{Binding SelectedAgent}"
+                              HorizontalAlignment="Stretch" />
+                    <Button Content="+ New Session" Command="{Binding NewSessionCommand}"
+                            IsEnabled="{Binding IsConnected}"
+                            HorizontalAlignment="Stretch"
+                            Background="#e94560" Foreground="White" FontWeight="Bold"
+                            HorizontalContentAlignment="Center"
+                            CornerRadius="6" Padding="8,8" />
+
+                    <!-- Sessions -->
+                    <TextBlock Text="SESSIONS" Foreground="#888" FontSize="11" FontWeight="Bold" Margin="0,8,0,0" />
+                    <ListBox ItemsSource="{Binding Sessions}"
+                             SelectedItem="{Binding SelectedSession}"
+                             MinHeight="200" MaxHeight="400"
+                             Background="Transparent"
+                             BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SessionItemViewModel">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="{Binding AgentName}" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding Status, StringFormat='({0})'}" Opacity="0.7" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Button Content="Delete Session" Command="{Binding DeleteSessionCommand}"
+                            IsEnabled="{Binding SelectedSession, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            HorizontalAlignment="Stretch"
+                            Background="Transparent" Foreground="#e74c3c"
+                            BorderBrush="#e74c3c" BorderThickness="1"
+                            HorizontalContentAlignment="Center"
+                            CornerRadius="6" Padding="8,8" />
+                </StackPanel>
+            </Border>
+
+            <!-- Main Content -->
+            <DockPanel Grid.Column="1" Margin="12">
+                <!-- Command Panel (bottom) -->
+                <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,8,0,0">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Send" Command="{Binding SendTaskCommand}"
+                                IsEnabled="{Binding CanSend}" Width="80"
+                                Background="#e94560" Foreground="White" FontWeight="Bold"
+                                HorizontalContentAlignment="Center"
+                                CornerRadius="6" Padding="8,8" Margin="8,0,0,0" />
+                        <TextBox Watermark="Enter a task for the agent..."
+                                 Text="{Binding TaskText}"
+                                 IsEnabled="{Binding CanSend}"
+                                 KeyDown="TaskInput_KeyDown" />
+                    </DockPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Flights"
+                                Command="{Binding FillQuickCardCommand}"
+                                CommandParameter="Find 3 nonstop SFO to JFK flights under $450 round trip"
+                                Background="#0f3460" BorderBrush="#2a2a4a" BorderThickness="1"
+                                Foreground="#e0e0e0" CornerRadius="8" Padding="8,8" FontSize="12" />
+                        <Button Content="Uber"
+                                Command="{Binding FillQuickCardCommand}"
+                                CommandParameter="Open Uber and request a ride from downtown to the airport"
+                                Background="#0f3460" BorderBrush="#2a2a4a" BorderThickness="1"
+                                Foreground="#e0e0e0" CornerRadius="8" Padding="8,8" FontSize="12" />
+                        <Button Content="Instacart"
+                                Command="{Binding FillQuickCardCommand}"
+                                CommandParameter="Order 2 lbs of organic bananas and almond milk on Instacart"
+                                Background="#0f3460" BorderBrush="#2a2a4a" BorderThickness="1"
+                                Foreground="#e0e0e0" CornerRadius="8" Padding="8,8" FontSize="12" />
+                        <Button Content="Meeting"
+                                Command="{Binding FillQuickCardCommand}"
+                                CommandParameter="Schedule a 30-min team standup for tomorrow at 10am on Google Calendar"
+                                Background="#0f3460" BorderBrush="#2a2a4a" BorderThickness="1"
+                                Foreground="#e0e0e0" CornerRadius="8" Padding="8,8" FontSize="12" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Session Controls -->
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                    <Button Content="&#x23F8; Pause" Command="{Binding PauseCommand}" IsEnabled="{Binding CanPause}"
+                            Background="#0f3460" Foreground="#e0e0e0" BorderBrush="#2a2a4a" BorderThickness="1"
+                            CornerRadius="6" Padding="8,8" FontWeight="Bold" />
+                    <Button Content="&#x25B6; Resume" Command="{Binding ResumeCommand}" IsEnabled="{Binding CanResume}"
+                            Background="#0f3460" Foreground="#e0e0e0" BorderBrush="#2a2a4a" BorderThickness="1"
+                            CornerRadius="6" Padding="8,8" FontWeight="Bold" />
+                    <Button Content="&#x23F9; Cancel" Command="{Binding CancelCommand}" IsEnabled="{Binding CanCancel}"
+                            Background="Transparent" Foreground="#e74c3c" BorderBrush="#e74c3c" BorderThickness="1"
+                            CornerRadius="6" Padding="8,8" FontWeight="Bold" />
+                </StackPanel>
+
+                <!-- Screenshot (top) + Event Stream (bottom) -->
+                <Grid RowDefinitions="3*,2*">
+                    <!-- Screenshot Viewer -->
+                    <Border Grid.Row="0" Background="#0a0a1a" BorderBrush="#2a2a4a" BorderThickness="1"
+                            CornerRadius="8" ClipToBounds="True" Margin="0,0,0,4">
+                        <Panel>
+                            <Image Source="{Binding ScreenshotData, Converter={StaticResource Base64ToImage}}"
+                                   Stretch="Uniform"
+                                   IsVisible="{Binding HasScreenshot}" />
+                            <TextBlock Text="No screenshot available"
+                                       Foreground="#555" FontSize="14"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       IsVisible="{Binding !HasScreenshot}" />
+                        </Panel>
+                    </Border>
+
+                    <!-- Event Stream -->
+                    <Border Grid.Row="1" Background="#0f0f23" BorderBrush="#2a2a4a" BorderThickness="1"
+                            CornerRadius="8" Margin="0,4,0,0">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Event Stream"
+                                       Foreground="#888" FontSize="11" FontWeight="Bold"
+                                       Margin="12,8,0,4" />
+                            <ScrollViewer x:Name="EventScroller" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Events}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:EventItemViewModel">
+                                            <Border Background="#16213e" CornerRadius="4" Padding="8,4" Margin="8,1">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Width="110" FontWeight="Bold" FontSize="12"
+                                                               Foreground="{Binding Color, Converter={StaticResource EventTypeToColor}}">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="{}{0} [{1}]">
+                                                                <Binding Path="Icon" />
+                                                                <Binding Path="EventType" />
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding Content}" Foreground="#ccc" FontSize="12"
+                                                               TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</Window>
