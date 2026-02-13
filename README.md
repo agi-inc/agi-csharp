@@ -352,6 +352,17 @@ var options = new SessionCreateOptions
 };
 ```
 
+## Demo App
+
+An interactive Avalonia desktop GUI that showcases all SDK capabilities — sessions, SSE streaming, screenshots, pause/resume/cancel, and quick action cards.
+
+**[agi-inc/demo-csharp-avalonia](https://github.com/agi-inc/demo-csharp-avalonia)**
+
+```bash
+git clone https://github.com/agi-inc/demo-csharp-avalonia.git && cd demo-csharp-avalonia
+AGI_API_KEY=your-key dotnet run
+```
+
 ## License
 
 MIT
