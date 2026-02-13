@@ -352,6 +352,24 @@ var options = new SessionCreateOptions
 };
 ```
 
+## Demo App
+
+An interactive Avalonia desktop application showcasing all SDK capabilities:
+
+- MVVM architecture with CommunityToolkit.Mvvm
+- API key connection and agent model selection
+- Session create/list/delete
+- Real-time SSE event streaming via `IAsyncEnumerable`
+- Live screenshot viewer (auto-refresh every 3s)
+- Pause/Resume/Cancel controls
+- Quick action cards for common tasks
+
+```bash
+AGI_API_KEY=your-key dotnet run --project demo/AgiDemo.csproj
+```
+
+See [`demo/`](./demo) for the full source.
+
 ## License
 
 MIT
